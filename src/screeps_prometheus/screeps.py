@@ -3,6 +3,8 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
+import screepsapi
+
 
 @dataclass
 class BasicAuth:
@@ -16,11 +18,12 @@ class TokenAuth:
 @dataclass
 class ScreepsConfig:
     auth: BasicAuth | TokenAuth
-    protocol: str
-    host: str
-    port: int
-    path: str
-    branch: str
+    host: str = "screeps.com"
+    port: int = 443
+    path: str = "/"
+    branch: str = "main"
+    ptr: bool = False
+    protocol: str = "https"
 
     @staticmethod
     def from_file(path: Path) -> ScreepsConfig:
@@ -31,10 +34,19 @@ class ScreepsConfig:
             vals = json.load(fh)
 
             return ScreepsConfig(
+                **vals,
                 auth=TokenAuth(vals["token"]) if vals["token"] else BasicAuth(username=vals["username"], password=vals["password"]),
-                protocol=vals["protocol"] or "https",
-                host=vals["host"] or "screeps.com",
-                port=vals["port"] or 443,
-                path=vals["path"] or "/",
-                branch=vals["branch"] or "main",
             )
+
+    def login(self) -> screepsapi.API:
+        if isinstance(self.auth, TokenAuth):
+            authopts = {"token": self.auth.token}
+        else:
+            authopts = {"u": self.auth.username, "p": self.auth.password}
+
+        return screepsapi.API(
+            host=self.host,
+            ptr=self.ptr,
+            secure=self.protocol == "https",
+            **authopts,
+        )
