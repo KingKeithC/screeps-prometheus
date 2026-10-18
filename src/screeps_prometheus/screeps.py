@@ -24,6 +24,7 @@ class ScreepsConfig:
     branch: str = "main"
     ptr: bool = False
     protocol: str = "https"
+    shard: str = "shard3"
 
     @staticmethod
     def from_file(path: Path) -> ScreepsConfig:

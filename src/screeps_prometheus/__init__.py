@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+import json
 from pathlib import Path
 from typing import OrderedDict
 
@@ -24,3 +25,11 @@ def main() -> None:
     me: OrderedDict = screepsApi.me() # type: ignore
 
     print(f"Logged into Screeps as {me["email"]}")
+
+    stats = screepsApi.memory(path="stats", shard=screepsConfig.shard)
+    if stats is None or len(stats) == 1:
+        print(f"No stats exist")
+    elif (stats["ok"]):
+        print(json.dumps(stats, indent=2))
+    else:
+        raise Exception(f'Fetching Memory was not OK: {stats["ok"]}')
