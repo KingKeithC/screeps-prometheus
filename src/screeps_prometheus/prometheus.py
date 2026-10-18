@@ -7,6 +7,8 @@ from pathlib import Path
 class PrometheusConfig:
     host: str
     port: int
+    jobName: str = "screeps-prometheus"
+    metricsNamespace: str = "screeps"
 
     @staticmethod
     def from_file(path: Path) -> PrometheusConfig:
@@ -15,8 +17,8 @@ class PrometheusConfig:
 
         with path.open('rb') as fh:
             vals = json.load(fh)
+            return PrometheusConfig(**vals)
 
-            return PrometheusConfig(
-                host=vals["host"] or "screeps.com",
-                port=vals["port"] or 443,
-            )
+    @property
+    def gateway(self) -> str:
+        return f'{self.host}:{self.port}'
