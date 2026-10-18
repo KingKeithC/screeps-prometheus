@@ -18,8 +18,12 @@
             #nodejs
             #typescript
             #typescript-language-server
+            python3
             uv
           ];
+          shellHook = ''
+	    uv sync
+          '';
         };
       }
     );
