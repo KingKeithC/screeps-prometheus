@@ -7,7 +7,10 @@ authors = [
     { name = "Keith King", email = "KingKeithC@gmail.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "prometheus-client>=0.26.0",
+    "screepsapi>=0.5.1",
+]
 
 [project.scripts]
 screeps-prometheus = "screeps_prometheus:main"
