@@ -33,7 +33,13 @@ def main() -> None:
     print(f"Logged into Screeps as {me["email"]}")
 
     registry = CollectorRegistry()
-    registry.register(ScreepsCollector(statGetter))
+    registry.register(ScreepsCollector(prometheusConfig, statGetter))
 
     print(f'Exposing Metric on localhost:{prometheusConfig.port}')
-    start_http_server(prometheusConfig.port)
+    server, t = start_http_server(port=prometheusConfig.port, registry=registry)
+    server.serve_forever()
+
+    print(f'Shutting down...')
+    server.server_close()
+    t.join()
+    print(f'Bye :)')

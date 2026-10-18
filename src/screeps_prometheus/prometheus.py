@@ -27,7 +27,8 @@ class PrometheusConfig:
 
 
 class ScreepsCollector(Collector):
-    def __init__(self, statGetter: StatScraper) -> None:
+    def __init__(self, config: PrometheusConfig, statGetter: StatScraper) -> None:
+        self._config = config
         self._statGetter = statGetter
 
     def collect(self) -> Iterable[Metric]:
