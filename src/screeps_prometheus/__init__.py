@@ -1,9 +1,12 @@
+
 from argparse import ArgumentParser
 from pathlib import Path
+from typing import Any, Callable
 
-from prometheus_client import CollectorRegistry, start_http_server
+type ScreepsStats = dict[str, Any]
+type StatScraper = Callable[[], ScreepsStats | None]
 
-from screeps_prometheus.prometheus import PrometheusConfig, ScreepsCollector, StatScraper
+from screeps_prometheus.prometheus import PrometheusConfig
 from screeps_prometheus.screeps import ScreepsConfig, TokenAuth
 
 
@@ -12,6 +15,8 @@ parser.add_argument("--screeps-token", "-token", type=str, help='Simple way of c
 parser.add_argument("--screeps-config", "-sc", type=Path, default="screeps.json", help='Use to connect to worlds other than MMO.')
 
 parser.add_argument("--prometheus-config", "-pc", type=Path, help="Path to a json file containing settings for the Prometheus Exporter")
+
+
 
 def main() -> None:
     args = parser.parse_args()
@@ -28,21 +33,6 @@ def main() -> None:
     else:
         prometheusConfig = PrometheusConfig()
 
-    screepsApi = screepsConfig.login()
-    statGetter: StatScraper = lambda: screepsApi.memory(path="stats", shard=screepsConfig.shard)
-
-    me: OrderedDict = screepsApi.me() # type: ignore
-
-    print(f"Logged into Screeps as {me["email"]}")
-
-    registry = CollectorRegistry()
-    registry.register(ScreepsCollector(prometheusConfig, statGetter))
-
-    print(f'Exposing Metric on localhost:{prometheusConfig.port}')
-    server, t = start_http_server(port=prometheusConfig.port, registry=registry)
-    server.serve_forever()
-
-    print(f'Shutting down...')
-    server.server_close()
-    t.join()
-    print(f'Bye :)')
+    api = screepsConfig.login()
+    scraper = screepsConfig.get_stat_scraper(api)
+    prometheusConfig.serve_forever(scraper)
