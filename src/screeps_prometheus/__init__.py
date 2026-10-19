@@ -11,7 +11,7 @@ parser = ArgumentParser(description='Daemon for Scraping Screeps Stats into Prom
 parser.add_argument("--screeps-token", "-token", type=str, help='Simple way of connecting to main MMO.')
 parser.add_argument("--screeps-config", "-sc", type=Path, default="screeps.json", help='Use to connect to worlds other than MMO.')
 
-parser.add_argument("--prometheus-config", "-pc", type=Path, default="prometheus.json")
+parser.add_argument("--prometheus-config", "-pc", type=Path, help="Path to a json file containing settings for the Prometheus Exporter")
 
 def main() -> None:
     args = parser.parse_args()
@@ -23,7 +23,10 @@ def main() -> None:
     else:
         raise Exception('Missing `--screeps-token` and `--screeps-config`!')
 
-    prometheusConfig = PrometheusConfig.from_file(args.prometheus_config)
+    if args.prometheus_config is not None:
+        prometheusConfig = PrometheusConfig.from_file(args.prometheus_config)
+    else:
+        prometheusConfig = PrometheusConfig()
 
     screepsApi = screepsConfig.login()
     statGetter: StatScraper = lambda: screepsApi.memory(path="stats", shard=screepsConfig.shard)

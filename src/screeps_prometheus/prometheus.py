@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
-from prometheus_client.metrics_core import CounterMetricFamily, GaugeMetricFamily, Metric
+from prometheus_client.metrics_core import GaugeMetricFamily, Metric
 from prometheus_client.registry import Collector
 
 
