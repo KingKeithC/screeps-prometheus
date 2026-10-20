@@ -42,6 +42,8 @@ class PrometheusConfig:
         exit(0)
 
 
+type ReportValue = int | float | dict
+
 class ScreepsCollector(Collector):
     def __init__(self, config: PrometheusConfig, statGetter: StatScraper) -> None:
         self._config = config
@@ -54,6 +56,20 @@ class ScreepsCollector(Collector):
             print("Stats fetch was null.")
             return
 
-        # Parse each stat name and value into a gauge
+        # Parse each item in the stat dictionary into a gauge and return the gauge
         for name, value in latest["data"].items():
-            yield GaugeMetricFamily(name, f'Auto gauge for {name}', value=value)
+            key = PrometheusConfig.metricsNamespace + '_' + name
+
+            if isinstance(value, int | float):
+                # Handle single scaler value
+                yield GaugeMetricFamily(key, f'Auto gauge for {name}', value=value)
+
+            elif isinstance(value, dict): # pyright: ignore[reportUnnecessaryIsInstance]
+                # Handle dict of scaler values
+                value: dict[str, int | float]
+                gauge = GaugeMetricFamily(key, f'Auto gauge for {name} family')
+
+                for mName, mValue in value.items():
+                    gauge.add_metric([mName], mValue)
+
+                yield gauge
