@@ -88,7 +88,7 @@ class ScreepsCollector(Collector):
             metricKey = "_".join([self._config.metricsNamespace, metricName])
             yield GaugeMetricFamily(
                 name=metricKey,
-                value=data,
+                value=float(data),
                 documentation=fs.description or f'Auto gauge for {metricName}',
                 unit=fs.unit
             )
@@ -171,11 +171,11 @@ class ScreepsCollector(Collector):
                 if isinstance(rest, dict):
                     for nextLabel, final in rest.items():
                         if isinstance(final, int | float):
-                            gauge.add_metric([label, nextLabel], final)
+                            gauge.add_metric([label, nextLabel], float(final))
                         else:
                             raise ValueError(f"Value expected to be int or float, was type {type(final)=}, {final=}")
                 else:
-                    gauge.add_metric([label], rest)
+                    gauge.add_metric([label], float(rest))
 
             yield gauge
 
