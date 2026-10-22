@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import Iterable, NoReturn
+from typing import Any, Iterable, Mapping, NoReturn
 
 from prometheus_client import CollectorRegistry, start_http_server
 from prometheus_client.metrics_core import GaugeMetricFamily, Metric
@@ -50,7 +50,7 @@ class FieldSchema:
     labelKeys: list[str] | None = None
     unit: str = "number"
 
-type ReportSchema = FieldSchema | dict[str, ReportSchema]
+type ReportSchema = dict[str, str | list[str]] | dict[str, ReportSchema]
 
 class ScreepsCollector(Collector):
     def __init__(self, config: PrometheusConfig, statGetter: StatScraper) -> None:
@@ -59,7 +59,7 @@ class ScreepsCollector(Collector):
 
     def parse_metrics(
             self,
-            schema: ReportSchema,
+            schema: FieldSchema | ReportSchema,
             path: list[str],
             data: ReportValue,
         ) -> Iterable[Metric]:
@@ -72,7 +72,7 @@ class ScreepsCollector(Collector):
         # Base Case
         if isinstance(data, int | float):
             print(f"Base Case: {path} {schema=}")
-            # One metric with no labels:
+            # One metric
 
             fs = schema if isinstance(schema, FieldSchema) else FieldSchema(
                 unit=getattr(schema, "unit", "number"),
@@ -177,8 +177,6 @@ class ScreepsCollector(Collector):
                             gauge.add_metric([label, nextLabel], final)
                         else:
                             raise ValueError(f"Value expected to be int or float, was type {type(final)=}, {final=}")
-                    else:
-                        raise ValueError(f"Items dict is empty!")
                 else:
                     gauge.add_metric([label], rest)
 
@@ -212,19 +210,21 @@ class ScreepsCollector(Collector):
             metric_names = list(schema.keys())
             for m in metric_names:
                 nextSchema = schema.get(m)
+                nextData = data[m]
+                nextPath = path + [m]
 
-                if not isinstance(nextSchema, dict):
+                if isinstance(nextSchema, str | list | None):
                     raise Exception("Dict Expected.")
 
-                if nextSchema.get("unit") or False:
-                    # Schema is a FieldSchema, recurse with a new one
-                    yield from self.parse_metrics(FieldSchema(
-                        labelKeys=getattr(nextSchema, "labelKeys", None),
-                        unit=getattr(nextSchema, "unit", "number"),
-                    ), [m], data[m])
-                else:
-                    # Recurse on another of this case
-                    yield from self.parse_metrics(nextSchema, [m], data[m])
+                fp = None
+                if nextSchema.get("unit", None) is not None:
+                    fp = FieldSchema(
+                        unit=nextSchema.get("unit"), # type: ignore
+                        labelKeys=nextSchema.get("labelKeys"), # type: ignore
+                    )
+
+                # Recurse on another of this case
+                yield from self.parse_metrics(nextSchema if fp is None else fp, nextPath, nextData)
         else:
             print(f"info: {info}\nschema: {json.dumps(schema)}\ndata: {json.dumps(data)}\npath: {path}")
             raise Exception("Unhandled Else Case")
