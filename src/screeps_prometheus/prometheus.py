@@ -61,11 +61,12 @@ class ScreepsCollector(Collector):
             key = PrometheusConfig.metricsNamespace + '_' + name
 
             if isinstance(value, int | float):
-                # Handle single scaler value
+                # Single scaler values get their own gauge, with no extra labels.
                 yield GaugeMetricFamily(key, f'Auto gauge for {name}', value=value)
 
+
             elif isinstance(value, dict): # pyright: ignore[reportUnnecessaryIsInstance]
-                # Handle dict of scaler values
+                # Dicts are treated as a set of labelled values under the same key.
                 value: dict[str, int | float]
                 gauge = GaugeMetricFamily(key, f'Auto gauge for {name} family')
 
