@@ -219,12 +219,11 @@ class ScreepsCollector(Collector):
                 if nextSchema.get("unit") or False:
                     # Schema is a FieldSchema, recurse with a new one
                     yield from self.parse_metrics(FieldSchema(
-                        labelKeys=getattr(schema.get(m), "labelKeys", None),
-                        unit=getattr(schema.get(m), "unit", "number"),
+                        labelKeys=getattr(nextSchema, "labelKeys", None),
+                        unit=getattr(nextSchema, "unit", "number"),
                     ), [m], data[m])
                 else:
                     # Recurse on another of this case
-                    print(f"Dict Case: {m}")
                     yield from self.parse_metrics(nextSchema, [m], data[m])
         else:
             print(f"info: {info}\nschema: {json.dumps(schema)}\ndata: {json.dumps(data)}\npath: {path}")
