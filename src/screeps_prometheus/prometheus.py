@@ -1,7 +1,6 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import json
 from pathlib import Path
-from re import match
 from typing import Iterable, NoReturn
 
 from prometheus_client import CollectorRegistry, start_http_server
