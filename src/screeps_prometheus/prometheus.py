@@ -67,10 +67,15 @@ class ScreepsCollector(Collector):
 
             elif isinstance(value, dict): # pyright: ignore[reportUnnecessaryIsInstance]
                 # Dicts are treated as a set of labelled values under the same key.
-                value: dict[str, int | float]
+                value: dict[str, int | float | dict[str, int | float]]
                 gauge = GaugeMetricFamily(key, f'Auto gauge for {name} family')
 
-                for mName, mValue in value.items():
-                    gauge.add_metric([mName], mValue)
+                # If the dict contains another dict, add the metrics from the second level under both keys.
+                for entry in value.items():
+                    if isinstance(entry[1], dict):
+                        for [mmName, mmValue] in entry[1].items():
+                            gauge.add_metric([entry[0], mmName], mmValue)
+                    else:
+                        gauge.add_metric([entry[0]], entry[1])
 
                 yield gauge
