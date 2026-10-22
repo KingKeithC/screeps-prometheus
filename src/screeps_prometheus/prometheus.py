@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from pathlib import Path
 from re import match
@@ -42,13 +42,177 @@ class PrometheusConfig:
         print(f'Bye :)')
         exit(0)
 
+type ReportScaler = int | float
+type ReportMetric = dict[str, ReportValue]
+type ReportValue = ReportScaler | ReportMetric
 
-type ReportValue = int | float | dict
+@dataclass
+class FieldSchema:
+    labelKeys: list[str] | None = None
+    unit: str = "number"
+
+type ReportSchema = FieldSchema | dict[str, ReportSchema]
 
 class ScreepsCollector(Collector):
     def __init__(self, config: PrometheusConfig, statGetter: StatScraper) -> None:
         self._config = config
         self._statGetter = statGetter
+
+    def parse_metrics(
+            self,
+            schema: ReportSchema,
+            path: list[str],
+            data: ReportValue,
+        ) -> Iterable[Metric]:
+
+        # Base Case
+        if isinstance(data, int | float) and isinstance(schema, FieldSchema):
+            # One metric with no labels:
+
+            # Schema:
+            # "last_reset_time": {
+            #   "unit": "ticks"
+            # },
+
+            # Data:
+            # "last_reset_time": 8675309
+
+            metricName = "_".join(path)
+            metricKey = "_".join([self._config.metricsNamespace, metricName])
+            yield GaugeMetricFamily(
+                name=metricKey,
+                value=data,
+                documentation=f'Auto gauge for {metricName}',
+                unit=schema.unit
+            )
+
+        # Recursive Case - Multiple Scaler Metrics, w/o Labels
+        elif isinstance(data, dict) and isinstance(schema, FieldSchema) and schema.labelKeys is None:
+            # Multiple metrics with no labels and shared FieldSchema:
+
+            # Schema:
+            # "meminfo": {
+            #   "unit": "bytes(SI)"
+            # },
+
+            # Data:
+            # "meminfo": {
+            #     "total_heap_size": 93204480,
+            #     "total_heap_size_executable": 524288,
+            #     "total_physical_size": 57683968,
+            #     "total_available_size": 742508904,
+            #     "used_heap_size": 29066496,
+            #     "heap_size_limit": 775946240,
+            #     "malloced_memory": 581736,
+            #     "peak_malloced_memory": 20454784,
+            #     "externally_allocated_size": 39767332
+            # },
+            for mName, mVal in data.items():
+                yield from self.parse_metrics(
+                    schema=schema,
+                    path=path + [mName],
+                    data=mVal,
+                )
+
+
+        # Recursive Case - Single Scaler Metric, w/Labels
+        elif isinstance(data, dict) and isinstance(schema, FieldSchema) and schema.labelKeys is not None:
+            # One metric with multiple labels and one FieldSchema:
+
+            # Schema:
+            # "room_quota": {
+            #   "labelKeys": [
+            #     "role",
+            #     "room"
+            #   ],
+            #   "unit": "number"
+            # },
+
+            # Data:
+            # "room_quota": {
+            #     "Miner": {
+            #         "E28S47": 3
+            #     },
+            #     "Worker": {
+            #         "E28S47": 12
+            #     },
+            #     "Defender": {
+            #         "E28S47": 0
+            #     },
+            #     "Scout": {
+            #         "E28S47": 1
+            #     },
+            #     "Attacker": {
+            #         "E28S47": 1
+            #     },
+            #     "Claimer": {
+            #         "E28S47": 1
+            #     }
+            # },
+            metricName = "_".join(path)
+            metricKey = "_".join([self._config.metricsNamespace, metricName])
+            gauge = GaugeMetricFamily(
+                name=metricKey,
+                documentation=f'Auto gauge for {metricName}',
+                unit=schema.unit,
+                labels=schema.labelKeys,
+            )
+
+            for label, rest in data.items():
+                if isinstance(rest, dict):
+                    for nextLabel, final in rest.items():
+                        if isinstance(final, int | float):
+                            gauge.add_metric([label, nextLabel], final)
+                        else:
+                            raise ValueError(f"Value expected to be int or float, was type {type(final)=}, {final=}")
+                    else:
+                        raise ValueError(f"Items dict is empty!")
+                else:
+                    gauge.add_metric([label], rest)
+
+            yield gauge
+
+        # Recursive Case, collection of metrics and schemas
+        elif isinstance(schema, dict) and isinstance(data, dict):
+            # Schema:
+            # "resources": { ... },
+            # "meminfo": { ... },
+            # "roleStats": {
+            #   "global_quota": {... },
+            #   "room_quota": {... },
+            #   "assigned_room_count": {... }
+            # },
+
+            # Data:
+            # "resources": { ... },
+            # "meminfo": { ... },
+            # "roleStats": {
+            #   "global_quota": {... },
+            #   "room_quota": {... },
+            #   "assigned_room_count": {... }
+            # },
+
+            if (len(schema) != len(data)):
+                raise ValueError(f"Schema and Data len mismatch: {len(schema)=} {len(data)=}")
+
+            metric_names = list(schema.keys())
+            for m in metric_names:
+                nextSchema = schema.get(m)
+
+                if getattr(nextSchema, "unit", False) or getattr(nextSchema, "labelKeys", False):
+                    # Schema is a FieldSchema, recurse with a new one
+                    yield from self.parse_metrics(FieldSchema(
+                        labelKeys=getattr(schema.get(m), "labelKeys", None),
+                        unit=getattr(schema.get(m), "unit", "number"),
+                    ), [m], data[m])
+                elif isinstance(nextSchema, dict):
+                    # Recurse on another of this case
+                    yield from self.parse_metrics(nextSchema, [m], data[m])
+                else:
+                    raise KeyError(f"Key {m} which definitely exists in {schema=} returned None on .get()?")
+        else:
+            raise Exception("Unhandled Else Case")
+
 
     def collect(self) -> Iterable[Metric]:
         print("Collecting stats...")
@@ -57,30 +221,11 @@ class ScreepsCollector(Collector):
             print("Stats fetch was null.")
             return
 
+        time = latest["data"]["time"]
+        yield GaugeMetricFamily("time", "The time as of which the stats are valid.", value=time)
+
+        schema = latest["data"]["schema"]
+        data = latest["data"]["data"]
+
         # Parse each item in the stat dictionary into a gauge and return the gauge
-        for name, value in latest["data"].items():
-            key = PrometheusConfig.metricsNamespace + '_' + name
-
-            if isinstance(value, int | float):
-                # Single scaler values get their own gauge, with no extra labels.
-                yield GaugeMetricFamily(key, f'Auto gauge for {name}', value=value)
-
-
-            elif isinstance(value, dict): # pyright: ignore[reportUnnecessaryIsInstance]
-                # Dicts are treated as a set of labelled values under the same key.
-                value: dict[str, int | float | dict[str, int | float]]
-
-                # If the dict contains another dict, add the metrics from the second level under both keys.
-                for entry in value.items():
-                    outerLabelType = "room" if match(entry[0], r'\d') else "role"
-                    outerLabelValue = entry[0]
-                    if isinstance(entry[1], dict):
-                        for [innerLabelValue, mmValue] in entry[1].items():
-                            innerLabelType = "room" if match(innerLabelValue, r'\d') else "role"
-                            gauge = GaugeMetricFamily(key, f'Auto gauge for {name} family', labels=[outerLabelType, innerLabelType])
-                            gauge.add_metric([outerLabelValue, innerLabelValue], mmValue)
-                            yield gauge
-                    else:
-                        gauge = GaugeMetricFamily(key, f'Auto gauge for {name} family', labels=[outerLabelType])
-                        gauge.add_metric([outerLabelValue], entry[1])
-                        yield gauge
+        yield from self.parse_metrics(schema,  [], data)
