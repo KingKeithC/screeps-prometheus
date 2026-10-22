@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import json
 from pathlib import Path
+from re import match
 from typing import Iterable, NoReturn
 
 from prometheus_client import CollectorRegistry, start_http_server
@@ -68,14 +69,18 @@ class ScreepsCollector(Collector):
             elif isinstance(value, dict): # pyright: ignore[reportUnnecessaryIsInstance]
                 # Dicts are treated as a set of labelled values under the same key.
                 value: dict[str, int | float | dict[str, int | float]]
-                gauge = GaugeMetricFamily(key, f'Auto gauge for {name} family')
 
                 # If the dict contains another dict, add the metrics from the second level under both keys.
                 for entry in value.items():
+                    outerLabelType = "room" if match(entry[0], r'\d') else "role"
+                    outerLabelValue = entry[0]
                     if isinstance(entry[1], dict):
-                        for [mmName, mmValue] in entry[1].items():
-                            gauge.add_metric([entry[0], mmName], mmValue)
+                        for [innerLabelValue, mmValue] in entry[1].items():
+                            innerLabelType = "room" if match(innerLabelValue, r'\d') else "role"
+                            gauge = GaugeMetricFamily(key, f'Auto gauge for {name} family', labels=[outerLabelType, innerLabelType])
+                            gauge.add_metric([outerLabelValue, innerLabelValue], mmValue)
+                            yield gauge
                     else:
-                        gauge.add_metric([entry[0]], entry[1])
-
-                yield gauge
+                        gauge = GaugeMetricFamily(key, f'Auto gauge for {name} family', labels=[outerLabelType])
+                        gauge.add_metric([outerLabelValue], entry[1])
+                        yield gauge
