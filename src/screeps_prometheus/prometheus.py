@@ -49,6 +49,7 @@ type ReportValue = ReportScaler | ReportMetric
 class FieldSchema:
     labelKeys: list[str] | None = None
     unit: str = "number"
+    description: str | None = None
 
 type ReportSchema = dict[str, str | list[str]] | dict[str, ReportSchema]
 
@@ -64,19 +65,15 @@ class ScreepsCollector(Collector):
             data: ReportValue,
         ) -> Iterable[Metric]:
 
-        info: str = (f"isinstance(data, int | float): {isinstance(data, int | float)}"
-            f"isinstance(data, dict): {isinstance(data, dict)}"
-            f"isinstance(schema, dict): {isinstance(schema, dict)}"
-            f"isinstance(schema, FieldSchema): {isinstance(schema, FieldSchema)}")
-
         # Base Case
         if isinstance(data, int | float):
             #print(f"Base Case: {path} {schema=}")
             # One metric
 
             fs = schema if isinstance(schema, FieldSchema) else FieldSchema(
-                unit=getattr(schema, "unit", "number"),
-                labelKeys=getattr(schema, "labelKeys", None),
+                unit=schema.get("unit"), # type: ignore
+                labelKeys=schema.get("labelKeys"), # type: ignore
+                description=schema.get("description"), # type: ignore
             )
 
             # Schema:
@@ -92,7 +89,7 @@ class ScreepsCollector(Collector):
             yield GaugeMetricFamily(
                 name=metricKey,
                 value=data,
-                documentation=f'Auto gauge for {metricName}',
+                documentation=fs.description or f'Auto gauge for {metricName}',
                 unit=fs.unit
             )
 
@@ -165,7 +162,7 @@ class ScreepsCollector(Collector):
             metricKey = "_".join([self._config.metricsNamespace, metricName])
             gauge = GaugeMetricFamily(
                 name=metricKey,
-                documentation=f'Auto gauge for {metricName}',
+                documentation=schema.description or f'Auto gauge for {metricName}',
                 unit=schema.unit,
                 labels=schema.labelKeys,
             )
@@ -217,10 +214,11 @@ class ScreepsCollector(Collector):
                     raise Exception("Dict Expected.")
 
                 fp = None
-                if nextSchema.get("unit", None) is not None:
+                if nextSchema.get("unit", None) is not None or nextSchema.get("description", None):
                     fp = FieldSchema(
                         unit=nextSchema.get("unit"), # type: ignore
                         labelKeys=nextSchema.get("labelKeys"), # type: ignore
+                        description=nextSchema.get("description"), # type: ignore
                     )
 
                 # Recurse on another of this case
@@ -236,9 +234,6 @@ class ScreepsCollector(Collector):
         if latest is None:
             print("Stats fetch was null.")
             return
-
-        time = latest["data"]["time"]
-        yield GaugeMetricFamily("time", "The time as of which the stats are valid.", value=time)
 
         schema = latest["data"]["schema"]
         data = latest["data"]["data"]
