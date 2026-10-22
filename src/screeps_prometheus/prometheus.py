@@ -71,7 +71,7 @@ class ScreepsCollector(Collector):
 
         # Base Case
         if isinstance(data, int | float):
-            print(f"Base Case: {path} {schema=}")
+            #print(f"Base Case: {path} {schema=}")
             # One metric
 
             fs = schema if isinstance(schema, FieldSchema) else FieldSchema(
@@ -98,7 +98,7 @@ class ScreepsCollector(Collector):
 
         # Recursive Case - Multiple Scaler Metrics, w/o Labels
         elif isinstance(schema, FieldSchema) and schema.labelKeys is None:
-            print(f"Multiple Scaler Metrics, w/o Labels: {path}, {schema=}")
+            #print(f"Multiple Scaler Metrics, w/o Labels: {path}, {schema=}")
             # Multiple metrics with no labels and shared FieldSchema:
 
             # Schema:
@@ -128,7 +128,7 @@ class ScreepsCollector(Collector):
 
         # Recursive Case - Single Scaler Metric, w/Labels
         elif isinstance(schema, FieldSchema) and schema.labelKeys is not None:
-            print(f"Single Scaler Metric, w/Labels Case: {path}, {schema=}")
+            #print(f"Single Scaler Metric, w/Labels Case: {path}, {schema=}")
             # One metric with multiple labels and one FieldSchema:
 
             # Schema:
@@ -184,7 +184,7 @@ class ScreepsCollector(Collector):
 
         # Recursive Case, collection of metrics and schemas
         elif isinstance(schema, dict):
-            print(f"Recursive Case: {path} {schema=} {len(data)=}")
+            #print(f"Recursive Case: {path} {schema=} {len(data)=}")
             # Schema:
             # "resources": { ... },
             # "meminfo": { ... },
@@ -204,7 +204,7 @@ class ScreepsCollector(Collector):
             # },
 
             if (len(schema) != len(data)):
-                print(f"info: {info}\nschema: {json.dumps(schema)}\ndata: {json.dumps(data)}\npath: {path}")
+                #print(f"info: {info}\nschema: {json.dumps(schema)}\ndata: {json.dumps(data)}\npath: {path}")
                 raise ValueError(f"Schema and Data len mismatch: {len(schema)=} {len(data)=}")
 
             metric_names = list(schema.keys())
@@ -226,7 +226,7 @@ class ScreepsCollector(Collector):
                 # Recurse on another of this case
                 yield from self.parse_metrics(nextSchema if fp is None else fp, nextPath, nextData)
         else:
-            print(f"info: {info}\nschema: {json.dumps(schema)}\ndata: {json.dumps(data)}\npath: {path}")
+            #print(f"info: {info}\nschema: {json.dumps(schema)}\ndata: {json.dumps(data)}\npath: {path}")
             raise Exception("Unhandled Else Case")
 
 
