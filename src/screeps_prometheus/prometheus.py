@@ -64,9 +64,20 @@ class ScreepsCollector(Collector):
             data: ReportValue,
         ) -> Iterable[Metric]:
 
+        info: str = (f"isinstance(data, int | float): {isinstance(data, int | float)}"
+            f"isinstance(data, dict): {isinstance(data, dict)}"
+            f"isinstance(schema, dict): {isinstance(schema, dict)}"
+            f"isinstance(schema, FieldSchema): {isinstance(schema, FieldSchema)}")
+
         # Base Case
-        if isinstance(data, int | float) and isinstance(schema, FieldSchema):
+        if isinstance(data, int | float):
+            print(f"Base Case: {path} {schema=}")
             # One metric with no labels:
+
+            fs = schema if isinstance(schema, FieldSchema) else FieldSchema(
+                unit=getattr(schema, "unit", "number"),
+                labelKeys=getattr(schema, "labelKeys", None),
+            )
 
             # Schema:
             # "last_reset_time": {
@@ -82,11 +93,12 @@ class ScreepsCollector(Collector):
                 name=metricKey,
                 value=data,
                 documentation=f'Auto gauge for {metricName}',
-                unit=schema.unit
+                unit=fs.unit
             )
 
         # Recursive Case - Multiple Scaler Metrics, w/o Labels
-        elif isinstance(data, dict) and isinstance(schema, FieldSchema) and schema.labelKeys is None:
+        elif isinstance(schema, FieldSchema) and schema.labelKeys is None:
+            print(f"Multiple Scaler Metrics, w/o Labels: {path}, {schema=}")
             # Multiple metrics with no labels and shared FieldSchema:
 
             # Schema:
@@ -115,7 +127,8 @@ class ScreepsCollector(Collector):
 
 
         # Recursive Case - Single Scaler Metric, w/Labels
-        elif isinstance(data, dict) and isinstance(schema, FieldSchema) and schema.labelKeys is not None:
+        elif isinstance(schema, FieldSchema) and schema.labelKeys is not None:
+            print(f"Single Scaler Metric, w/Labels Case: {path}, {schema=}")
             # One metric with multiple labels and one FieldSchema:
 
             # Schema:
@@ -172,7 +185,8 @@ class ScreepsCollector(Collector):
             yield gauge
 
         # Recursive Case, collection of metrics and schemas
-        elif isinstance(schema, dict) and isinstance(data, dict):
+        elif isinstance(schema, dict):
+            print(f"Recursive Case: {path} {schema=} {len(data)=}")
             # Schema:
             # "resources": { ... },
             # "meminfo": { ... },
@@ -192,24 +206,28 @@ class ScreepsCollector(Collector):
             # },
 
             if (len(schema) != len(data)):
+                print(f"info: {info}\nschema: {json.dumps(schema)}\ndata: {json.dumps(data)}\npath: {path}")
                 raise ValueError(f"Schema and Data len mismatch: {len(schema)=} {len(data)=}")
 
             metric_names = list(schema.keys())
             for m in metric_names:
                 nextSchema = schema.get(m)
 
-                if getattr(nextSchema, "unit", False) or getattr(nextSchema, "labelKeys", False):
+                if not isinstance(nextSchema, dict):
+                    raise Exception("Dict Expected.")
+
+                if nextSchema.get("unit") or False:
                     # Schema is a FieldSchema, recurse with a new one
                     yield from self.parse_metrics(FieldSchema(
                         labelKeys=getattr(schema.get(m), "labelKeys", None),
                         unit=getattr(schema.get(m), "unit", "number"),
                     ), [m], data[m])
-                elif isinstance(nextSchema, dict):
-                    # Recurse on another of this case
-                    yield from self.parse_metrics(nextSchema, [m], data[m])
                 else:
-                    raise KeyError(f"Key {m} which definitely exists in {schema=} returned None on .get()?")
+                    # Recurse on another of this case
+                    print(f"Dict Case: {m}")
+                    yield from self.parse_metrics(nextSchema, [m], data[m])
         else:
+            print(f"info: {info}\nschema: {json.dumps(schema)}\ndata: {json.dumps(data)}\npath: {path}")
             raise Exception("Unhandled Else Case")
 
 
