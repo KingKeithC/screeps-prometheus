@@ -1,6 +1,6 @@
 # Screeps Prometheus Connector and Grafana Dashboard
 
-Thsi repo contains a Prometheus stats Collector to scrape stats from Screeps and present them in a format that can be scraped by Prometheus (or other compatible software.)
+This repo contains a Prometheus stats Collector to scrape stats from Screeps and present them in a format that can be scraped by Prometheus (or other compatible software.)
 
 It also contains a Grafana dashboard for displaying the collected stats, and a sample below that can be used to collect the necessary series' the dashboard references.
 
