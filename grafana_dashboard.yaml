@@ -1,0 +1,1955 @@
+apiVersion: dashboard.grafana.app/v2
+kind: Dashboard
+metadata:
+  name: kelk4fc
+  namespace: default
+  uid: 8a798476-8a71-4050-8742-65e946d0a2c2
+  resourceVersion: "1792782358917009"
+  generation: 63
+  creationTimestamp: "2026-10-18T06:55:33Z"
+  labels:
+    grafana.app/deprecatedInternalID: "4028148072534016"
+  annotations:
+    grafana.app/createdBy: user:u000000001
+    grafana.app/saved-from-ui: Grafana v13.2.4 (0e79aef9d9)
+    grafana.app/updatedBy: user:u000000001
+    grafana.app/updatedTimestamp: "2026-10-23T19:05:58Z"
+spec:
+  annotations:
+    - kind: AnnotationQuery
+      spec:
+        query:
+          kind: DataQuery
+          group: grafana
+          version: v0
+          datasource:
+            name: "-- Grafana --"
+          spec:
+            limit: 100
+            matchAny: false
+            tags: []
+            type: dashboard
+        enable: true
+        hide: true
+        iconColor: rgba(0, 211, 255, 1)
+        name: Annotations & Alerts
+        builtIn: true
+  cursorSync: Tooltip
+  editable: true
+  elements:
+    panel-1:
+      kind: Panel
+      spec:
+        id: 1
+        title: Game.time
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: screeps_time_ticks{job="screeps_prometheus"}
+                      format: time_series
+                      legendFormat: Game.time
+                      range: true
+                  refId: A
+                  hidden: false
+            transformations: []
+            queryOptions:
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: stat
+          version: 13.2.4
+          spec:
+            options:
+              colorMode: value
+              graphMode: area
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - last
+                fields: /^Game\.time$/
+                values: false
+              showPercentChange: false
+              textMode: value_and_name
+              wideLayout: false
+            fieldConfig:
+              defaults:
+                unit: none
+                decimals: 0
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - value: 0
+                      color: green
+                color:
+                  mode: thresholds
+              overrides: []
+        transparent: true
+    panel-10:
+      kind: Panel
+      spec:
+        id: 10
+        title: CPU Bucket
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        last_over_time(screeps_cpu_unusedBucket_cpu{job="screeps_prometheus"}[$__rate_interval])
+                      fromExploreMetrics: false
+                      legendFormat: __auto
+                      range: true
+                  refId: cpu__unusedBucket-avg
+                  hidden: false
+            transformations: []
+            queryOptions:
+              maxDataPoints: 500
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: gauge
+          version: 13.2.4
+          spec:
+            options:
+              barShape: flat
+              barWidthFactor: 0.5
+              effects:
+                barGlow: false
+                centerGlow: false
+                gradient: false
+              endpointMarker: point
+              minVizHeight: 75
+              minVizWidth: 75
+              orientation: auto
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ""
+                values: false
+              segmentCount: 1
+              segmentSpacing: 0.3
+              shape: gauge
+              showThresholdLabels: false
+              showThresholdMarkers: false
+              sizing: auto
+              sparkline: false
+              textMode: auto
+            fieldConfig:
+              defaults:
+                displayName: Ticks of CPU
+                unit: none
+                decimals: 0
+                min: 0
+                max: 10000
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - value: 0
+                      color: red
+                color:
+                  mode: continuous-RdYlGr
+                  fixedColor: green
+              overrides: []
+        transparent: true
+    panel-11:
+      kind: Panel
+      spec:
+        id: 11
+        title: Global Power Level
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      exemplar: false
+                      expr: >-
+                        last_over_time(screeps_gpl_level_number{job="screeps_prometheus"}[$__rate_interval])
+                      format: time_series
+                      instant: false
+                      legendFormat: ""
+                      range: true
+                  refId: gcl_level
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      exemplar: false
+                      expr: >-
+                        screeps_gpl_progress_number{job="screeps_prometheus"} /
+                        screeps_gpl_progressTotal_number{job="screeps_prometheus"}
+                      instant: false
+                      legendFormat: ""
+                      range: true
+                  refId: gcl_progress
+                  hidden: false
+            transformations: []
+            queryOptions:
+              maxDataPoints: 500
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: stat
+          version: 13.2.4
+          spec:
+            options:
+              colorMode: value
+              graphMode: area
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ""
+                values: false
+              showPercentChange: true
+              textMode: value_and_name
+              wideLayout: false
+            fieldConfig:
+              defaults:
+                unit: none
+                thresholds:
+                  mode: percentage
+                  steps:
+                    - value: 0
+                      color: dark-red
+                    - value: 50
+                      color: "#EAB839"
+                    - value: 100
+                      color: dark-green
+                color:
+                  mode: thresholds
+              overrides:
+                - matcher:
+                    id: byFrameRefID
+                    options: gcl_progress
+                  properties:
+                    - id: unit
+                      value: percentunit
+                    - id: thresholds
+                      value:
+                        mode: percentage
+                        steps:
+                          - color: dark-red
+                            value: 0
+                          - color: yellow
+                            value: 25
+                          - color: blue
+                            value: 75
+                          - color: dark-green
+                            value: 100
+                    - id: min
+                      value: 0
+                    - id: max
+                      value: 1
+                    - id: displayName
+                      value: Progress
+                - matcher:
+                    id: byFrameRefID
+                    options: gcl_level
+                  properties:
+                    - id: min
+                      value: 1
+                    - id: max
+                      value: 8
+                    - id: unit
+                      value: none
+                    - id: displayName
+                      value: Level
+        transparent: true
+    panel-14:
+      kind: Panel
+      spec:
+        id: 14
+        title: "Energy Distribution - Room: $room"
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        sum(screeps_energy_in_sources_number{job="screeps_prometheus",
+                        room=~"$room"})
+                      legendFormat: Mines
+                      range: true
+                  refId: energy-mines
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        sum(screeps_energy_in_my_creeps_number{job="screeps_prometheus",
+                        room=~"$room"})
+                      instant: false
+                      legendFormat: Creeps
+                      range: true
+                  refId: energy-creeps
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        sum(screeps_energy_in_containers_number{job="screeps_prometheus",
+                        room=~"$room"})
+                      instant: false
+                      legendFormat: Containers
+                      range: true
+                  refId: energy-containers
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        sum(screeps_energy_in_spawns_number{job="screeps_prometheus",
+                        room=~"$room"})
+                      instant: false
+                      legendFormat: Spawns/Extensions
+                      range: true
+                  refId: energy-spawns
+                  hidden: false
+            transformations: []
+            queryOptions:
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: timeseries
+          version: 13.2.4
+          spec:
+            options:
+              legend:
+                calcs:
+                  - lastNotNull
+                  - mean
+                  - stdDev
+                displayMode: list
+                placement: bottom
+                showLegend: true
+              timezone:
+                - browser
+              tooltip:
+                hideZeros: false
+                mode: multi
+                sort: asc
+            fieldConfig:
+              defaults:
+                unit: none
+                min: 0
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - value: 0
+                      color: green
+                color:
+                  mode: palette-classic
+                custom:
+                  axisBorderShow: true
+                  axisCenteredZero: false
+                  axisColorMode: text
+                  axisGridShow: true
+                  axisLabel: ""
+                  axisPlacement: auto
+                  barAlignment: 0
+                  barWidthFactor: 0.7
+                  drawStyle: bars
+                  fillOpacity: 100
+                  gradientMode: none
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  insertNulls: false
+                  lineInterpolation: linear
+                  lineWidth: 4
+                  pointSize: 5
+                  scaleDistribution:
+                    type: linear
+                  showPoints: auto
+                  showValues: false
+                  spanNulls: false
+                  stacking:
+                    group: A
+                    mode: normal
+                  thresholdsStyle:
+                    mode: "off"
+                fieldMinMax: false
+              overrides: []
+        transparent: true
+    panel-15:
+      kind: Panel
+      spec:
+        id: 15
+        title: Screeps-Prometheus Logs
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: loki
+                    version: v0
+                    datasource:
+                      name: cffvbit3lr4e8c
+                    spec:
+                      direction: backward
+                      editorMode: builder
+                      expr: >-
+                        {service="screeps-prometheus"} | label_format
+                        level=detected_level | json | line_format `{{.MESSAGE}}`
+                      queryType: range
+                  refId: A
+                  hidden: false
+            transformations: []
+            queryOptions: {}
+        vizConfig:
+          kind: VizConfig
+          group: logs
+          version: 13.2.4
+          spec:
+            options:
+              dedupStrategy: none
+              detailsMode: sidebar
+              enableInfiniteScrolling: true
+              enableLogDetails: true
+              fontSize: small
+              prettifyLogMessage: true
+              showControls: false
+              showFieldSelector: false
+              showLabels: false
+              showLevel: true
+              showTime: true
+              sortOrder: Descending
+              syntaxHighlighting: true
+              timestampResolution: ms
+              unwrappedColumns: false
+              wrapLogMessage: false
+            fieldConfig:
+              defaults: {}
+              overrides: []
+    panel-19:
+      kind: Panel
+      spec:
+        id: 19
+        title: Memory Usage
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_meminfo_total_heap_size_bytes{job="screeps_prometheus"}
+                      fromExploreMetrics: false
+                      legendFormat: Heap Total
+                      range: true
+                  refId: memin
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_meminfo_used_heap_size_bytes{job="screeps_prometheus"}
+                      instant: false
+                      legendFormat: Heap Used
+                      range: true
+                  refId: A
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_meminfo_heap_size_limit_bytes{job="screeps_prometheus"}
+                      instant: false
+                      legendFormat: Heap Limit
+                      range: true
+                  refId: B
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_meminfo_malloced_memory_bytes{job="screeps_prometheus"}
+                      instant: false
+                      legendFormat: Malloc'd Amount
+                      range: true
+                  refId: C
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_meminfo_peak_malloced_memory_bytes{job="screeps_prometheus"}
+                      instant: false
+                      legendFormat: Peak Malloc'd Amount
+                      range: true
+                  refId: D
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_meminfo_externally_allocated_size_bytes{job="screeps_prometheus"}
+                      instant: false
+                      legendFormat: Externally Allocated
+                      range: true
+                  refId: E
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_meminfo_total_physical_size_bytes{job="screeps_prometheus"}
+                      instant: false
+                      legendFormat: Physical Total
+                      range: true
+                  refId: F
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_meminfo_total_available_size_bytes{job="screeps_prometheus"}
+                      instant: false
+                      legendFormat: Physical Available
+                      range: true
+                  refId: G
+                  hidden: false
+            transformations: []
+            queryOptions:
+              maxDataPoints: 500
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: timeseries
+          version: 13.2.4
+          spec:
+            options:
+              annotations:
+                multiLane: true
+              legend:
+                calcs:
+                  - mean
+                displayMode: list
+                placement: bottom
+                showLegend: true
+              timezone:
+                - browser
+              tooltip:
+                hideZeros: false
+                mode: multi
+                sort: desc
+            fieldConfig:
+              defaults:
+                unit: decbytes
+                decimals: 2
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - value: 0
+                      color: green
+                    - value: 80
+                      color: red
+                color:
+                  mode: palette-classic
+                custom:
+                  axisBorderShow: true
+                  axisCenteredZero: false
+                  axisColorMode: text
+                  axisGridShow: true
+                  axisLabel: ""
+                  axisPlacement: auto
+                  barAlignment: 0
+                  barWidthFactor: 0.6
+                  drawStyle: line
+                  fillOpacity: 9
+                  gradientMode: none
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  insertNulls: false
+                  lineInterpolation: linear
+                  lineWidth: 1
+                  pointSize: 5
+                  scaleDistribution:
+                    type: linear
+                  showPoints: auto
+                  showValues: false
+                  spanNulls: false
+                  stacking:
+                    group: A
+                    mode: none
+                  thresholdsStyle:
+                    mode: "off"
+                fieldMinMax: true
+              overrides: []
+        transparent: true
+    panel-2:
+      kind: Panel
+      spec:
+        id: 2
+        title: "Storage Overview - Room: $room"
+        description: |+
+
+
+          **Type:** *gauge*
+
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        sum(screeps_energy_in_storage_number{job="screeps_prometheus",
+                        room=~"$room"})
+                      fromExploreMetrics: false
+                      legendFormat: __auto
+                      range: true
+                  refId: totalEnergyStored
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        sum(screeps_energy_in_storage_number{job="screeps_prometheus"})
+                        /
+                        (sum(screeps_capacity_of_storage_number{job="screeps_prometheus"}))
+                      instant: false
+                      legendFormat: __auto
+                      range: true
+                  refId: storageFillRatio
+                  hidden: false
+            transformations:
+              - kind: Transformation
+                group: calculateField
+                spec:
+                  options:
+                    binary:
+                      left:
+                        fixed: ""
+                      right:
+                        fixed: ""
+                    mode: binary
+                    reduce:
+                      reducer: sum
+            queryOptions:
+              maxDataPoints: 500
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: stat
+          version: 13.2.4
+          spec:
+            options:
+              colorMode: value
+              graphMode: area
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ""
+                values: false
+              showPercentChange: true
+              textMode: value_and_name
+              wideLayout: false
+            fieldConfig:
+              defaults:
+                unit: percent
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - value: 0
+                      color: dark-red
+                    - value: 50000
+                      color: yellow
+                    - value: 100000
+                      color: green
+                    - value: 200000
+                      color: dark-green
+                color:
+                  mode: thresholds
+              overrides:
+                - matcher:
+                    id: byFrameRefID
+                    options: totalEnergyStored
+                  properties:
+                    - id: unit
+                      value: none
+                    - id: displayName
+                      value: Energy Units Stored
+                - matcher:
+                    id: byFrameRefID
+                    options: storageFillRatio
+                  properties:
+                    - id: thresholds
+                      value:
+                        mode: percentage
+                        steps:
+                          - color: dark-red
+                            value: 0
+                          - color: "#EAB839"
+                            value: 5
+                          - color: semi-dark-orange
+                            value: 8
+                          - color: semi-dark-green
+                            value: 20
+                          - color: dark-blue
+                            value: 100
+                    - id: displayName
+                      value: Storage Used
+                    - id: min
+                      value: 0
+                    - id: max
+                      value: 100
+        transparent: true
+    panel-20:
+      kind: Panel
+      spec:
+        id: 20
+        title: "Assignd Creeps - Room: $room, Role: $role"
+        description: |-
+          The living number of creeps currently spawned by assigned room.
+
+          **Type:** *gauge*
+
+          **Unit:** number
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_assigned_room_count_number{job="screeps_prometheus",
+                        room=~"$room", role=~"$role"}
+                      fromExploreMetrics: false
+                      legendFormat: "{{role}} Living"
+                      range: true
+                  refId: alive
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_room_quota_number{job="screeps_prometheus",
+                        room=~"$room", role=~"$role"}
+                      instant: false
+                      legendFormat: "{{role}} Quota"
+                      range: true
+                  refId: quota
+                  hidden: false
+            transformations: []
+            queryOptions:
+              maxDataPoints: 500
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: timeseries
+          version: 13.2.4
+          spec:
+            options:
+              annotations:
+                multiLane: true
+              legend:
+                calcs:
+                  - lastNotNull
+                  - range
+                  - changeCount
+                displayMode: list
+                placement: bottom
+                showLegend: true
+              timezone:
+                - browser
+              tooltip:
+                hideZeros: true
+                mode: multi
+                sort: desc
+            fieldConfig:
+              defaults:
+                unit: none
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - value: 0
+                      color: green
+                color:
+                  mode: palette-classic-by-name
+                custom:
+                  axisBorderShow: true
+                  axisCenteredZero: false
+                  axisColorMode: text
+                  axisGridShow: true
+                  axisLabel: ""
+                  axisPlacement: auto
+                  barAlignment: 0
+                  barWidthFactor: 0.6
+                  drawStyle: line
+                  fillOpacity: 20
+                  gradientMode: none
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  insertNulls: 900000
+                  lineInterpolation: linear
+                  lineStyle:
+                    fill: solid
+                  lineWidth: 1
+                  pointSize: 8
+                  scaleDistribution:
+                    type: linear
+                  showPoints: auto
+                  showValues: false
+                  spanNulls: false
+                  stacking:
+                    group: A
+                    mode: none
+                  thresholdsStyle:
+                    mode: "off"
+                fieldMinMax: false
+              overrides:
+                - matcher:
+                    id: byFrameRefID
+                    options: quota
+                  properties:
+                    - id: custom.drawStyle
+                      value: points
+                    - id: custom.showValues
+                      value: false
+                    - id: custom.pointSize
+                      value: 2
+        transparent: true
+    panel-21:
+      kind: Panel
+      spec:
+        id: 21
+        title: ""
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: screeps_cpu_used_cpu{job="screeps_prometheus"}
+                      legendFormat: CPU Used
+                      range: true
+                  refId: A
+                  hidden: false
+            transformations: []
+            queryOptions:
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: stat
+          version: 13.2.4
+          spec:
+            options:
+              colorMode: value
+              graphMode: area
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: inverted
+              reduceOptions:
+                calcs:
+                  - mean
+                fields: ""
+                values: false
+              showPercentChange: true
+              textMode: value_and_name
+              wideLayout: true
+            fieldConfig:
+              defaults:
+                unit: none
+                decimals: 2
+                min: 0
+                max: 20
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - value: 0
+                      color: dark-green
+                    - value: 10
+                      color: light-green
+                    - value: 12
+                      color: yellow
+                    - value: 20
+                      color: dark-red
+                color:
+                  mode: thresholds
+              overrides: []
+        transparent: true
+    panel-23:
+      kind: Panel
+      spec:
+        id: 23
+        title: "Event Counts - Room: $room"
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      exemplar: false
+                      expr: >-
+                        sum by(event_type)
+                        (screeps_event_counts_number{job="screeps_prometheus",
+                        room=~"$room"})
+                      instant: false
+                      legendFormat: "{{event_type}}"
+                      range: true
+                  refId: amounts
+                  hidden: false
+            transformations: []
+            queryOptions:
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: barchart
+          version: 13.2.4
+          spec:
+            options:
+              barRadius: 0.05
+              barWidth: 0.79
+              fullHighlight: false
+              groupWidth: 0.7
+              legend:
+                calcs:
+                  - sum
+                displayMode: table
+                placement: right
+                showLegend: true
+                sortBy: Total
+                sortDesc: true
+              orientation: auto
+              showValue: never
+              stacking: normal
+              tooltip:
+                hideZeros: true
+                mode: multi
+                sort: desc
+              xField: Time
+              xTickLabelRotation: 0
+              xTickLabelSpacing: 100
+            fieldConfig:
+              defaults:
+                unit: none
+                decimals: 0
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - value: 0
+                      color: green
+                color:
+                  mode: palette-classic
+                custom:
+                  axisBorderShow: true
+                  axisCenteredZero: false
+                  axisColorMode: text
+                  axisLabel: ""
+                  axisPlacement: auto
+                  fillOpacity: 61
+                  gradientMode: none
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  lineWidth: 0
+                  scaleDistribution:
+                    type: linear
+                  thresholdsStyle:
+                    mode: "off"
+                fieldMinMax: true
+              overrides: []
+        transparent: true
+    panel-24:
+      kind: Panel
+      spec:
+        id: 24
+        title: "Event Amounts - Room: $room"
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      exemplar: false
+                      expr: >-
+                        sum by(event_type)
+                        (screeps_event_amounts_number{job="screeps_prometheus",
+                        room=~"$room"})
+                      format: time_series
+                      instant: false
+                      interval: ""
+                      legendFormat: "{{event_type}}"
+                      range: true
+                  refId: amounts
+                  hidden: false
+            transformations: []
+            queryOptions:
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: heatmap
+          version: 13.2.4
+          spec:
+            options:
+              calculate: false
+              cellGap: 0
+              cellValues:
+                unit: ""
+              color:
+                exponent: 0.5
+                fill: dark-orange
+                mode: scheme
+                reverse: false
+                scale: exponential
+                scheme: Oranges
+                steps: 80
+              exemplars:
+                color: rgba(255,0,255,0.7)
+              filterValues:
+                le: 1.e-9
+              legend:
+                placement: bottom
+                show: false
+              rowsFrame:
+                layout: auto
+              tooltip:
+                mode: single
+                showColorScale: true
+                yHistogram: false
+              yAxis:
+                axisPlacement: right
+                reverse: false
+                unit: ""
+            fieldConfig:
+              defaults:
+                custom:
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  scaleDistribution:
+                    type: linear
+              overrides: []
+        transparent: true
+    panel-25:
+      kind: Panel
+      spec:
+        id: 25
+        title: Hourly Rolling Tickrate
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      exemplar: false
+                      expr: rate(screeps_time_ticks{job="screeps_prometheus"}[1h])
+                      instant: false
+                      legendFormat: TPS/1h
+                      range: true
+                  refId: TickRate
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: __expr__
+                    version: v0
+                    datasource:
+                      name: __expr__
+                    spec:
+                      expression: TickRate
+                      reducer: min
+                      settings:
+                        mode: dropNN
+                      type: reduce
+                  refId: Best
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: __expr__
+                    version: v0
+                    datasource:
+                      name: __expr__
+                    spec:
+                      expression: TickRate
+                      reducer: max
+                      settings:
+                        mode: dropNN
+                      type: reduce
+                  refId: Worst
+                  hidden: false
+            transformations:
+              - kind: Transformation
+                group: reduce
+                spec:
+                  disabled: true
+                  options:
+                    includeTimeField: false
+                    labelsToFields: true
+                    mode: reduceFields
+                    reducers:
+                      - max
+                      - min
+                      - lastNotNull
+            queryOptions:
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: stat
+          version: 13.2.4
+          spec:
+            options:
+              colorMode: value
+              graphMode: area
+              justifyMode: auto
+              orientation: vertical
+              percentChangeColorMode: inverted
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ""
+                values: false
+              showPercentChange: true
+              textMode: auto
+              wideLayout: true
+            fieldConfig:
+              defaults:
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - value: 0
+                      color: green
+                    - value: 80
+                      color: red
+                color:
+                  mode: thresholds
+                fieldMinMax: false
+              overrides:
+                - matcher:
+                    id: byName
+                    scope: series
+                    options: >-
+                      Best {instance="utilities-container-main",
+                      job="screeps_prometheus"}
+                  properties:
+                    - id: displayName
+                      value: Best
+                - matcher:
+                    id: byName
+                    scope: series
+                    options: >-
+                      Worst {instance="utilities-container-main",
+                      job="screeps_prometheus"}
+                  properties:
+                    - id: displayName
+                      value: Worst
+        transparent: true
+    panel-3:
+      kind: Panel
+      spec:
+        id: 3
+        title: ""
+        description: >-
+          Difference between Game.time and the lastResetTime which is only
+          updated on game resets.
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      expr: >-
+                        screeps_time_ticks{job="screeps_prometheus"} -
+                        screeps_last_reset_time_ticks{job="screeps_prometheus"}
+                      fromExploreMetrics: false
+                      legendFormat: Ticks
+                      range: true
+                  refId: TimeSinceReset
+                  hidden: false
+            transformations: []
+            queryOptions:
+              maxDataPoints: 500
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: stat
+          version: 13.2.4
+          spec:
+            options:
+              colorMode: value
+              graphMode: area
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: same_as_value
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ""
+                values: false
+              showPercentChange: false
+              textMode: value_and_name
+              wideLayout: true
+            fieldConfig:
+              defaults:
+                displayName: Ticks Since Reset
+                unit: Ticks
+                decimals: 0
+                min: 0
+                thresholds:
+                  mode: percentage
+                  steps:
+                    - value: 0
+                      color: dark-green
+                color:
+                  mode: shades
+                  fixedColor: blue
+                fieldMinMax: false
+              overrides: []
+        transparent: true
+    panel-6:
+      kind: Panel
+      spec:
+        id: 6
+        title: Stats Daemon Activity
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: cffvafdhwo4cga
+                    spec:
+                      editorMode: builder
+                      expr: up{job="screeps_prometheus"}
+                      instant: false
+                      legendFormat: Running
+                      range: true
+                  refId: isRunning
+                  hidden: false
+            transformations: []
+            queryOptions:
+              maxDataPoints: 200
+        vizConfig:
+          kind: VizConfig
+          group: state-timeline
+          version: 13.2.4
+          spec:
+            options:
+              alignValue: center
+              legend:
+                displayMode: list
+                placement: bottom
+                showLegend: false
+              mergeValues: true
+              rowHeight: 0.9
+              showValue: never
+              tooltip:
+                hideZeros: false
+                mode: single
+                sort: asc
+            fieldConfig:
+              defaults:
+                unit: bool_on_off
+                min: 0
+                max: 1
+                mappings:
+                  - type: value
+                    options:
+                      "0":
+                        text: Down
+                        color: red
+                        index: 0
+                      "1":
+                        text: Up
+                        color: green
+                        index: 1
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - value: 0
+                      color: green
+                color:
+                  mode: fixed
+                custom:
+                  axisPlacement: hidden
+                  fillOpacity: 70
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  insertNulls: 900000
+                  lineWidth: 0
+                  spanNulls: 900000
+                fieldMinMax: false
+              overrides: []
+        transparent: true
+    panel-9:
+      kind: Panel
+      spec:
+        id: 9
+        title: Global Control Level
+        description: ""
+        links: []
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      exemplar: false
+                      expr: >-
+                        last_over_time(screeps_gcl_level_number{job="screeps_prometheus"}[$__rate_interval])
+                      format: time_series
+                      instant: false
+                      legendFormat: ""
+                      range: true
+                  refId: gcl_level
+                  hidden: false
+              - kind: PanelQuery
+                spec:
+                  query:
+                    kind: DataQuery
+                    group: prometheus
+                    version: v0
+                    datasource:
+                      name: ${ds}
+                    spec:
+                      editorMode: builder
+                      exemplar: false
+                      expr: >-
+                        screeps_gcl_progress_number{job="screeps_prometheus"} /
+                        screeps_gcl_progressTotal_number{job="screeps_prometheus"}
+                      instant: false
+                      legendFormat: ""
+                      range: true
+                  refId: gcl_progress
+                  hidden: false
+            transformations: []
+            queryOptions:
+              maxDataPoints: 500
+              interval: $_shared_interval
+        vizConfig:
+          kind: VizConfig
+          group: stat
+          version: 13.2.4
+          spec:
+            options:
+              colorMode: value
+              graphMode: area
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ""
+                values: false
+              showPercentChange: true
+              textMode: value_and_name
+              wideLayout: false
+            fieldConfig:
+              defaults:
+                unit: none
+                thresholds:
+                  mode: percentage
+                  steps:
+                    - value: 0
+                      color: dark-red
+                    - value: 50
+                      color: "#EAB839"
+                    - value: 100
+                      color: dark-green
+                color:
+                  mode: thresholds
+              overrides:
+                - matcher:
+                    id: byFrameRefID
+                    options: gcl_progress
+                  properties:
+                    - id: unit
+                      value: percentunit
+                    - id: thresholds
+                      value:
+                        mode: percentage
+                        steps:
+                          - color: dark-red
+                            value: 0
+                          - color: yellow
+                            value: 25
+                          - color: blue
+                            value: 75
+                          - color: dark-green
+                            value: 100
+                    - id: min
+                      value: 0
+                    - id: max
+                      value: 1
+                    - id: displayName
+                      value: Progress
+                - matcher:
+                    id: byFrameRefID
+                    options: gcl_level
+                  properties:
+                    - id: min
+                      value: 1
+                    - id: max
+                      value: 8
+                    - id: unit
+                      value: none
+                    - id: displayName
+                      value: Level
+        transparent: true
+  layout:
+    kind: GridLayout
+    spec:
+      items:
+        - kind: GridLayoutItem
+          spec:
+            x: 0
+            "y": 0
+            width: 24
+            height: 2
+            element:
+              kind: ElementReference
+              name: panel-6
+        - kind: GridLayoutItem
+          spec:
+            x: 0
+            "y": 2
+            width: 5
+            height: 4
+            element:
+              kind: ElementReference
+              name: panel-9
+        - kind: GridLayoutItem
+          spec:
+            x: 5
+            "y": 2
+            width: 2
+            height: 4
+            element:
+              kind: ElementReference
+              name: panel-1
+        - kind: GridLayoutItem
+          spec:
+            x: 7
+            "y": 2
+            width: 4
+            height: 4
+            element:
+              kind: ElementReference
+              name: panel-21
+        - kind: GridLayoutItem
+          spec:
+            x: 11
+            "y": 2
+            width: 10
+            height: 8
+            element:
+              kind: ElementReference
+              name: panel-19
+        - kind: GridLayoutItem
+          spec:
+            x: 21
+            "y": 2
+            width: 3
+            height: 8
+            element:
+              kind: ElementReference
+              name: panel-10
+        - kind: GridLayoutItem
+          spec:
+            x: 0
+            "y": 6
+            width: 3
+            height: 4
+            element:
+              kind: ElementReference
+              name: panel-11
+        - kind: GridLayoutItem
+          spec:
+            x: 3
+            "y": 6
+            width: 6
+            height: 4
+            element:
+              kind: ElementReference
+              name: panel-25
+        - kind: GridLayoutItem
+          spec:
+            x: 9
+            "y": 6
+            width: 2
+            height: 4
+            element:
+              kind: ElementReference
+              name: panel-3
+        - kind: GridLayoutItem
+          spec:
+            x: 0
+            "y": 10
+            width: 10
+            height: 9
+            element:
+              kind: ElementReference
+              name: panel-20
+        - kind: GridLayoutItem
+          spec:
+            x: 10
+            "y": 10
+            width: 4
+            height: 9
+            element:
+              kind: ElementReference
+              name: panel-2
+        - kind: GridLayoutItem
+          spec:
+            x: 14
+            "y": 10
+            width: 10
+            height: 9
+            element:
+              kind: ElementReference
+              name: panel-14
+        - kind: GridLayoutItem
+          spec:
+            x: 0
+            "y": 19
+            width: 12
+            height: 10
+            element:
+              kind: ElementReference
+              name: panel-23
+        - kind: GridLayoutItem
+          spec:
+            x: 12
+            "y": 19
+            width: 12
+            height: 10
+            element:
+              kind: ElementReference
+              name: panel-24
+        - kind: GridLayoutItem
+          spec:
+            x: 0
+            "y": 29
+            width: 24
+            height: 7
+            element:
+              kind: ElementReference
+              name: panel-15
+  links:
+    - title: Screeps
+      type: link
+      icon: external link
+      tooltip: Open Screeps
+      url: https://screeps.com/a/
+      tags: []
+      asDropdown: false
+      targetBlank: true
+      includeVars: false
+      keepTime: false
+  liveNow: false
+  preload: true
+  tags:
+    - games
+  timeSettings:
+    timezone: browser
+    from: now-1h
+    to: now
+    autoRefresh: 90s
+    autoRefreshIntervals:
+      - 90s
+      - 3m
+      - 5m
+      - 15m
+      - 30m
+      - 1h
+      - 2h
+      - 1d
+    hideTimepicker: false
+    fiscalYearStartMonth: 0
+    nowDelay: 90s
+  title: Screeps
+  variables:
+    - kind: IntervalVariable
+      spec:
+        name: _shared_interval
+        query: 90s,3m,5m,10m,30m,1h,6h,12h,1d,7d,14d,30d
+        current:
+          text: 90s
+          value: 90s
+        options:
+          - selected: true
+            text: 90s
+            value: 90s
+          - selected: false
+            text: 3m
+            value: 3m
+          - selected: false
+            text: 5m
+            value: 5m
+          - selected: false
+            text: 10m
+            value: 10m
+          - selected: false
+            text: 30m
+            value: 30m
+          - selected: false
+            text: 1h
+            value: 1h
+          - selected: false
+            text: 6h
+            value: 6h
+          - selected: false
+            text: 12h
+            value: 12h
+          - selected: false
+            text: 1d
+            value: 1d
+          - selected: false
+            text: 7d
+            value: 7d
+          - selected: false
+            text: 14d
+            value: 14d
+          - selected: false
+            text: 30d
+            value: 30d
+        auto: true
+        auto_min: 90s
+        auto_count: 50
+        refresh: onTimeRangeChanged
+        label: Interval
+        hide: inControlsMenu
+        skipUrlSync: false
+    - kind: DatasourceVariable
+      spec:
+        name: ds
+        pluginId: prometheus
+        refresh: onDashboardLoad
+        regex: ""
+        current:
+          text: prometheus
+          value: cffvafdhwo4cga
+        options: []
+        multi: false
+        includeAll: false
+        label: Datasource
+        hide: inControlsMenu
+        skipUrlSync: false
+        allowCustomValue: false
+    - kind: AdhocVariable
+      group: loki
+      datasource:
+        name: cffvbit3lr4e8c
+      spec:
+        name: Filters
+        baseFilters: []
+        filters: []
+        defaultKeys: []
+        hide: dontHide
+        skipUrlSync: false
+        allowCustomValue: true
+        enableGroupBy: false
+    - kind: QueryVariable
+      spec:
+        name: room
+        current:
+          text: All
+          value:
+            - $__all
+        label: Room
+        hide: dontHide
+        refresh: onDashboardLoad
+        skipUrlSync: false
+        description: Limit Dashboard to a specific room
+        query:
+          kind: DataQuery
+          group: prometheus
+          version: v0
+          datasource:
+            name: cffvafdhwo4cga
+          spec:
+            qryType: 1
+            query: label_values({job="screeps_prometheus"},room)
+            refId: PrometheusVariableQueryEditor-VariableQuery
+        regex: ""
+        regexApplyTo: value
+        sort: disabled
+        definition: label_values({job="screeps_prometheus"},room)
+        options: []
+        multi: true
+        includeAll: true
+        allowCustomValue: false
+    - kind: QueryVariable
+      spec:
+        name: role
+        current:
+          text: All
+          value:
+            - $__all
+        label: Role
+        hide: dontHide
+        refresh: onDashboardLoad
+        skipUrlSync: false
+        query:
+          kind: DataQuery
+          group: prometheus
+          version: v0
+          datasource:
+            name: cffvafdhwo4cga
+          spec:
+            qryType: 1
+            query: label_values({job="screeps_prometheus"},role)
+            refId: PrometheusVariableQueryEditor-VariableQuery
+        regex: ""
+        regexApplyTo: value
+        sort: disabled
+        definition: label_values({job="screeps_prometheus"},role)
+        options: []
+        multi: true
+        includeAll: true
+        allowCustomValue: false
