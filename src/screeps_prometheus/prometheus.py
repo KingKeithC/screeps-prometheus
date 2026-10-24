@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import Any, Iterable, Mapping, NoReturn
+from typing import Iterable, NoReturn
 
 from prometheus_client import CollectorRegistry, start_http_server
 from prometheus_client.metrics_core import GaugeMetricFamily, Metric
