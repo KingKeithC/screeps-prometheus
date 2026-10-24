@@ -1,7 +1,9 @@
 
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
+from typing import Optional
 
 from screepsapi import API # pyright: ignore[reportMissingTypeStubs]
 
@@ -17,6 +19,7 @@ class BasicAuth:
 class TokenAuth:
     token: str
 
+# TODO: Align with https://github.com/screepers/screepers-standards/blob/master/SS3-Unified_Credentials_File.md
 @dataclass
 class ScreepsConfig:
     auth: BasicAuth | TokenAuth
@@ -28,10 +31,48 @@ class ScreepsConfig:
     protocol: str = "https"
     shard: str = "shard3"
 
+    ENV_SCREEPS_CONFIG = "SCREEPS_CONFIG"
+
+    def to_file(self, path: Path, clobber: bool = False):
+        if path.is_file() and not clobber:
+            raise FileExistsError(f"{path=} exists but {clobber=}")
+
+        with path.open('w') as fh:
+            json.dump(self, fh)
+
     @staticmethod
-    def from_file(path: Path) -> ScreepsConfig:
+    def from_standard_locations() -> Optional[ScreepsConfig]:
+        if (config := ScreepsConfig.from_env()) is not None:
+            return config
+
+        for search in [
+            "project/.screeps.yaml"                # 1. Project Root
+            "./.screeps.yaml"                      # 2. Current Working Directory
+            "$XDG_CONFIG_HOME/screeps/config.yaml" # 3. XDG Config Directory
+            "$HOME/.config/screeps/config.yaml"    # 4. XDG Config Default Directory
+            "%APPDATA%/screeps/config.yaml"        # 5. APPDATA (Windows Only)
+            "~/.screeps.yaml"                      # 6. Home Directory
+        ]:
+            file = Path(os.path.expandvars(search))
+            if (config := ScreepsConfig.from_file(file)) is not None:
+                return config
+
+        return None
+
+    @staticmethod
+    def from_env() -> Optional[ScreepsConfig]:
+        if ((filePath := os.environ.get(ScreepsConfig.ENV_SCREEPS_CONFIG, None)) is not None):
+            return ScreepsConfig.from_file(Path(filePath))
+
+        # raise EnvironmentError(f"{ScreepsConfig.ENV_SCREEPS_CONFIG} is not defined!")
+        return None
+
+
+    @staticmethod
+    def from_file(path: Path) -> Optional[ScreepsConfig]:
         if not path.is_file():
-            raise FileNotFoundError(path)
+            # raise FileNotFoundError(path)
+            return None
 
         with path.open('rb') as fh:
             vals = json.load(fh)
