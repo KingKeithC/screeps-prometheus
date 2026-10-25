@@ -6,6 +6,7 @@ import yaml
 # Needed by other classes so must be declared here
 type ScreepsStats = dict[str, Any]
 type StatScraper = Callable[[], ScreepsStats | None]
+type LogCallback = Callable[[str], None]
 
 def from_json_or_yaml(path: Path) -> Optional[object]:
     with path.open('r') as fh:

@@ -2,14 +2,10 @@ from tap import Tap
 import yaml
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, override
 
-from screepsapi import API  # pyright: ignore[reportMissingTypeStubs]
-
-from screeps_prometheus import ScreepsStats, StatScraper, from_json_or_yaml
-
-
-
+from screepsapi import API, Socket  # pyright: ignore[reportMissingTypeStubs]
+from screeps_prometheus import LogCallback, ScreepsStats, StatScraper, from_json_or_yaml
 
 class BasicAuth:
     def __init__(self, username: str, password: str) -> None:
@@ -123,7 +119,7 @@ class ScreepsConfig(Tap):
         )
 
         me: OrderedDict = api.me() # type: ignore
-        print(f"Logged into Screeps as {me["email"]}")
+        print(f"Logged into Screeps as {me}")
         return api
 
 
@@ -140,3 +136,40 @@ class ScreepsConfig(Tap):
             return ret
 
         return inner
+
+    def get_console_watcher(self, api: API, with_each_log: LogCallback) -> ScreepsConsoleMonitor:
+        return ScreepsConsoleMonitor(api, self, with_each_log)
+
+
+class ScreepsConsoleMonitor(Socket):
+    CONSOLE_WATCHPOINT = "console"
+
+    def __init__(self, api: API, config: ScreepsConfig, log_callback: LogCallback) -> None:
+        self.api = api
+        self.config = config
+        self.log_callback = log_callback
+
+        if (isinstance(config.auth, TokenAuth)):
+            super().__init__( # type: ignore
+                ptr=config.ptr,
+                logging=False,
+                host=config.host,
+                secure=True,
+                token=config.auth.token
+            )
+        else:
+            super().__init__( # type: ignore
+                user=config.auth.username,
+                password=config.auth.password,
+                ptr=config.ptr,
+                host=config.host,
+                secure=True
+            )
+
+    def on_open(self, ws): # type: ignore
+        super().on_open(ws) # type: ignore
+        self.subscribe_user(ScreepsConsoleMonitor.CONSOLE_WATCHPOINT) # type: ignore
+
+    @override
+    def process_log(self, ws, message, shard='shard0'): # type: ignore
+        self.log_callback(message)
