@@ -6,12 +6,12 @@ from typing import Iterable, NoReturn
 from prometheus_client import CollectorRegistry, start_http_server
 from prometheus_client.metrics_core import GaugeMetricFamily, Metric
 from prometheus_client.registry import Collector
+from tap import Tap
 
 from screeps_prometheus import ScreepsStats, StatScraper
 
 
-@dataclass
-class PrometheusConfig:
+class PrometheusConfig(Tap):
     addr: str = "0.0.0.0"
     port: int = 8585
     jobName: str = "screeps-prometheus"

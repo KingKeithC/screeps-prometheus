@@ -1,8 +1,9 @@
-
-from argparse import ArgumentParser
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
+from tap import Tap
+
+# Needed by other classes so must be declared here
 type ScreepsStats = dict[str, Any]
 type StatScraper = Callable[[], ScreepsStats | None]
 
@@ -10,29 +11,43 @@ from screeps_prometheus.prometheus import PrometheusConfig
 from screeps_prometheus.screeps import ScreepsConfig, TokenAuth
 
 
-parser = ArgumentParser(description='Daemon for Scraping Screeps Stats into Prometheus.')
-parser.add_argument("--screeps-token", "-token", type=str, help='Simple way of connecting to main MMO.')
-parser.add_argument("--screeps-config", "-sc", type=Path, default="screeps.json", help='Use to connect to worlds other than MMO.')
+class ScreepsPrometheus(Tap):
+    screeps: Optional[str | Path | ScreepsConfig]
+    prometheus: Optional[Path | PrometheusConfig]
 
-parser.add_argument("--prometheus-config", "-pc", type=Path, help="Path to a json file containing settings for the Prometheus Exporter")
+    def get_screeps_config(self) -> ScreepsConfig:
+        if isinstance(self.screeps, ScreepsConfig):
+            return self.screeps
+        elif isinstance(self.screeps, str):
+            return ScreepsConfig(auth=TokenAuth(self.screeps))
+        elif isinstance(self.screeps, Path):
+            resolved = ScreepsConfig.from_file(self.screeps)
+            if resolved is None: raise FileNotFoundError(self.screeps)
+            return resolved
+        elif self.screeps is None:
+            resolved = ScreepsConfig.from_standard_locations()
+            if resolved is None: raise LookupError("Could not find a screeps config file!")
+            return resolved
+        raise ValueError(f"`screeps` parsed but doesn't seem valid: {self.screeps}")
+
+    def get_prometheus_config(self) -> PrometheusConfig:
+        if isinstance(self.prometheus, PrometheusConfig):
+            return self.prometheus
+        elif isinstance(self.prometheus, Path):
+            return PrometheusConfig.from_file(self.prometheus)
+        elif self.prometheus is None:
+            return PrometheusConfig()
+        raise ValueError(f"`prometheus` parsed but doesn't seem valid: {self.prometheus}")
+
+    @staticmethod
+    def run() -> None:
+        args = ScreepsPrometheus().parse_args()
+        screeps_config = args.get_screeps_config()
+        prometheus_config = args.get_prometheus_config()
+        api = screeps_config.login()
+        scraper = screeps_config.get_stat_scraper(api)
+        prometheus_config.serve_forever(scraper)
 
 
-
-def main() -> None:
-    args = parser.parse_args()
-
-    if args.screeps_token is not None:
-        screepsConfig = ScreepsConfig(TokenAuth(token=args.screeps_token))
-    elif args.screeps_config is not None:
-        screepsConfig = ScreepsConfig.from_file(args.screeps_config)
-    else:
-        raise Exception('Missing `--screeps-token` and `--screeps-config`!')
-
-    if args.prometheus_config is not None:
-        prometheusConfig = PrometheusConfig.from_file(args.prometheus_config)
-    else:
-        prometheusConfig = PrometheusConfig()
-
-    api = screepsConfig.login()
-    scraper = screepsConfig.get_stat_scraper(api)
-    prometheusConfig.serve_forever(scraper)
+def main():
+    ScreepsPrometheus.run()

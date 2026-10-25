@@ -1,6 +1,7 @@
 
 from dataclasses import dataclass
 import json
+from tap import Tap
 import yaml
 import os
 from pathlib import Path
@@ -33,8 +34,7 @@ class TokenAuth:
     token: str
 
 # TODO: Align with https://github.com/screepers/screepers-standards/blob/master/SS3-Unified_Credentials_File.md
-@dataclass
-class ScreepsConfig:
+class ScreepsConfig(Tap):
     auth: BasicAuth | TokenAuth
     host: str = "screeps.com"
     port: int = 443
