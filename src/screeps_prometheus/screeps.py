@@ -1,13 +1,26 @@
 
 from dataclasses import dataclass
 import json
+import yaml
 import os
 from pathlib import Path
 from typing import Optional
 
-from screepsapi import API # pyright: ignore[reportMissingTypeStubs]
+from screepsapi import API  # pyright: ignore[reportMissingTypeStubs]
 
 from screeps_prometheus import ScreepsStats, StatScraper
+
+def from_json_or_yaml(path: Path) -> Optional[object]:
+    with path.open('r') as fh:
+        # Try to parse with yaml first
+        yamlObj = yaml.load(fh, yaml.Loader)
+        if yamlObj is not None: return yamlObj
+
+        # Then fallback to JSON if we got nothing
+        jsonObj = json.load(fh)
+        if jsonObj is not None: return jsonObj
+
+    return None
 
 
 @dataclass
@@ -38,7 +51,7 @@ class ScreepsConfig:
             raise FileExistsError(f"{path=} exists but {clobber=}")
 
         with path.open('w') as fh:
-            json.dump(self, fh)
+            yaml.dump(self, fh)
 
     @staticmethod
     def from_standard_locations() -> Optional[ScreepsConfig]:
@@ -74,13 +87,13 @@ class ScreepsConfig:
             # raise FileNotFoundError(path)
             return None
 
-        with path.open('rb') as fh:
-            vals = json.load(fh)
+        vals = from_json_or_yaml(path)
+        if not isinstance(vals, dict): return None
 
-            return ScreepsConfig(
-                **vals,
-                auth=TokenAuth(vals["token"]) if vals["token"] else BasicAuth(username=vals["username"], password=vals["password"]),
-            )
+        return ScreepsConfig(
+            **vals, # type: ignore
+            auth=TokenAuth(vals["token"]) if vals["token"] else BasicAuth(username=vals["username"], password=vals["password"]), # type: ignore
+        )
 
     def login(self) -> API:
         if isinstance(self.auth, TokenAuth):
