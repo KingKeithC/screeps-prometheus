@@ -9,12 +9,12 @@ from screeps_prometheus.screeps import ScreepsConfig
 
 
 class ScreepsPrometheus(Tap):
-    screeps_token: Optional[str]
-    screeps_config: Optional[Path]
-    screeps_extra: Optional[ScreepsConfig]
+    screeps_token: Optional[str] = None
+    screeps_config: Optional[Path] = None
+    screeps_extra: Optional[ScreepsConfig] = None
 
-    prometheus_config: Optional[Path]
-    prometheus_extra: Optional[PrometheusConfig]
+    prometheus_config: Optional[Path] = None
+    prometheus_extra: Optional[PrometheusConfig] = None
 
     def get_screeps_config(self) -> ScreepsConfig:
         fallback = ScreepsConfig.from_standard_locations()
@@ -31,7 +31,7 @@ class ScreepsPrometheus(Tap):
             config = fallback
 
         if config is None:
-            raise LookupError("No suitable config could be found.")
+            raise LookupError("No suitable config could be found, did you at least provide a token?")
 
         if self.screeps_extra is not None:
             config += self.screeps_extra

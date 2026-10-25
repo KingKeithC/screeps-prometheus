@@ -1,6 +1,3 @@
-
-from dataclasses import dataclass
-import json
 from tap import Tap
 import yaml
 import os
@@ -14,14 +11,24 @@ from screeps_prometheus import ScreepsStats, StatScraper, from_json_or_yaml
 
 
 
-@dataclass
 class BasicAuth:
-    username: str
-    password: str
+    def __init__(self, username: str, password: str) -> None:
+        self.username = username
+        self.password = password
 
-@dataclass
 class TokenAuth:
-    token: str
+    def __init__(self, token: str) -> None:
+        self.token = token
+
+
+def to_auth(string: str) -> BasicAuth | TokenAuth:
+    fields = string.split(":")
+    if (len(fields) == 2):
+        return BasicAuth(username=fields[0], password=fields[1])
+    elif (len(fields)== 1):
+        return TokenAuth(token=string)
+    raise ValueError(f"Unknown Kind of auth {string}")
+
 
 # TODO: Align with https://github.com/screepers/screepers-standards/blob/master/SS3-Unified_Credentials_File.md
 class ScreepsConfig(Tap):
@@ -35,6 +42,9 @@ class ScreepsConfig(Tap):
     shard: str = "shard3"
 
     ENV_SCREEPS_CONFIG = "SCREEPS_CONFIG"
+
+    def configure(self) -> None:
+        self.add_argument("--auth", type=to_auth) # type: ignore
 
     def __add__(self, other: ScreepsConfig | None):
         if other is None: return self
@@ -81,7 +91,9 @@ class ScreepsConfig(Tap):
 
     @staticmethod
     def from_token(token: str) -> ScreepsConfig:
-        return ScreepsConfig(auth=TokenAuth(token=token))
+        new = ScreepsConfig()
+        new.auth = TokenAuth(token=token)
+        return new
 
     @staticmethod
     def from_file(path: Path) -> Optional[ScreepsConfig]:
