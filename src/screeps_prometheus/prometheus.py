@@ -17,6 +17,16 @@ class PrometheusConfig(Tap):
     jobName: str = "screeps-prometheus"
     metricsNamespace: str = "screeps"
 
+    def __add__(self, other: PrometheusConfig | None):
+        if other is None:
+            return self
+
+        dictme = self.as_dict()
+        dictthem = self.as_dict()
+        dictme.update(dictthem)
+        dictus: PrometheusConfig = self.from_dict(dictme)
+        return dictus
+
     @staticmethod
     def from_file(path: Path) -> PrometheusConfig:
         if not path.is_file():

@@ -9,19 +9,9 @@ from typing import Optional
 
 from screepsapi import API  # pyright: ignore[reportMissingTypeStubs]
 
-from screeps_prometheus import ScreepsStats, StatScraper
+from screeps_prometheus import ScreepsStats, StatScraper, from_json_or_yaml
 
-def from_json_or_yaml(path: Path) -> Optional[object]:
-    with path.open('r') as fh:
-        # Try to parse with yaml first
-        yamlObj = yaml.load(fh, yaml.Loader)
-        if yamlObj is not None: return yamlObj
 
-        # Then fallback to JSON if we got nothing
-        jsonObj = json.load(fh)
-        if jsonObj is not None: return jsonObj
-
-    return None
 
 
 @dataclass
@@ -45,6 +35,14 @@ class ScreepsConfig(Tap):
     shard: str = "shard3"
 
     ENV_SCREEPS_CONFIG = "SCREEPS_CONFIG"
+
+    def __add__(self, other: ScreepsConfig | None):
+        if other is None: return self
+        dictme = self.as_dict()
+        dictthem = self.as_dict()
+        dictme.update(dictthem)
+        dictus: ScreepsConfig = self.from_dict(dictme)
+        return dictus
 
     def to_file(self, path: Path, clobber: bool = False):
         if path.is_file() and not clobber:
@@ -80,6 +78,10 @@ class ScreepsConfig(Tap):
         # raise EnvironmentError(f"{ScreepsConfig.ENV_SCREEPS_CONFIG} is not defined!")
         return None
 
+
+    @staticmethod
+    def from_token(token: str) -> ScreepsConfig:
+        return ScreepsConfig(auth=TokenAuth(token=token))
 
     @staticmethod
     def from_file(path: Path) -> Optional[ScreepsConfig]:
