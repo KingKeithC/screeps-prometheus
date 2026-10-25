@@ -1,4 +1,4 @@
-from multiprocessing.pool import ThreadPool
+import html
 from pathlib import Path
 from threading import Thread
 from typing import Literal, Optional
@@ -63,7 +63,7 @@ class ScreepsPrometheus(Tap):
 
         logs = Thread()
         if args.action == "tail-console" or args.action == "both":
-            watcher = screeps_config.get_console_watcher(api, lambda log: print(log))
+            watcher = screeps_config.get_console_watcher(api, lambda log: print(html.unescape(log), flush=True))
             logs = Thread(target=watcher.start)
 
         threads = [metrics, logs]
