@@ -1,6 +1,6 @@
 import html
 from pathlib import Path
-from threading import Thread
+from threading import Event, Thread
 from typing import Literal, Optional
 
 from tap import Tap
@@ -56,22 +56,32 @@ class ScreepsPrometheus(Tap):
         prometheus_config = args.get_prometheus_config()
         api = screeps_config.login()
 
-        metrics = Thread()
+        stop_event = Event()
+        threads: list[Thread] = []
         if args.action == "serve-metrics" or args.action == "both":
             scraper = screeps_config.get_stat_scraper(api)
-            metrics = Thread(target=prometheus_config.serve_forever, args=(scraper,))
+            metrics = Thread(
+                target=prometheus_config.serve_forever,
+                args=(scraper, stop_event),
+                daemon=True,
+            )
+            threads.append(metrics)
 
-        logs = Thread()
+        watcher = None
         if args.action == "tail-console" or args.action == "both":
             watcher = screeps_config.get_console_watcher(api, lambda log: print(html.unescape(log), flush=True))
-            logs = Thread(target=watcher.start)
-
-        threads = [metrics, logs]
+            logs = Thread(target=watcher.start, daemon=True)
+            threads.append(logs)
 
         for t in threads:
             t.start()
 
-        for t in threads:
-            t.join()
+        while all(t.is_alive() for t in threads):
+            for t in threads:
+                t.join(timeout=0.1)
 
-        exit(0)
+        stop_event.set()
+        if watcher is not None and getattr(watcher, "ws", None):
+            watcher.disconnect()
+
+        raise SystemExit(1)

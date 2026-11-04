@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import Iterable, NoReturn
+from threading import Event
+from typing import Iterable
 
 from prometheus_client import CollectorRegistry, start_http_server
 from prometheus_client.metrics_core import GaugeMetricFamily, Metric
@@ -36,20 +37,20 @@ class PrometheusConfig(Tap):
             vals = json.load(fh)
             return PrometheusConfig(**vals)
 
-    def serve_forever(self, scraper: StatScraper) -> NoReturn:
+    def serve_forever(self, scraper: StatScraper, stop_event: Event) -> None:
         # Create the registry with our custom collector.
         reg = CollectorRegistry()
         reg.register(ScreepsCollector(self, scraper))
 
         print(f'Serving Metrics on {self.addr}:{self.port}')
         server, t = start_http_server(addr=self.addr, port=self.port, registry=reg)
-        server.serve_forever()
+        stop_event.wait()
 
         print(f'Shutting down...')
+        server.shutdown()
         server.server_close()
         t.join()
         print(f'Bye :)')
-        exit(0)
 
 type ReportScaler = int | float
 type ReportMetric = dict[str, ReportValue]
