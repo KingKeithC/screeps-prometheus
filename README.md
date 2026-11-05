@@ -242,3 +242,8 @@ can workaround the issue by tracking the stat as a counter and carrying the valu
 
 Take care that the stat changes rarely enough or in small values so that it won't overflow by being added to constantly, since resetting the counter may
 cause unexpected behaviour in your presentation layer.
+
+See Also:
+
+https://github.com/screepers/python-screeps/blob/master/docs/Endpoints.md
+https://github.com/daboross/rust-screeps-api/blob/master/protocol-docs/websocket.md
