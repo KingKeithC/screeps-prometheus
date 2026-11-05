@@ -1,11 +1,14 @@
 from tap import Tap
 import yaml
 import os
+import logging
 from pathlib import Path
 from typing import Optional, override
 
 from screepsapi import API, Socket  # pyright: ignore[reportMissingTypeStubs]
 from screeps_prometheus import LogCallback, ScreepsStats, StatScraper, from_json_or_yaml
+
+logger = logging.getLogger(__name__)
 
 class BasicAuth:
     def __init__(self, username: str, password: str) -> None:
@@ -166,9 +169,37 @@ class ScreepsConsoleMonitor(Socket):
                 secure=True
             )
 
+    @override
+    def connect(self):  # type: ignore
+        logger.info("Connecting to Screeps websocket at %s", self.config.host)
+        super().connect()
+
+    @override
+    def on_error(self, ws, error):  # type: ignore
+        logger.error("Screeps websocket error: %s", error)
+
     def on_open(self, ws): # type: ignore
+        logger.info("Screeps websocket connected; authenticating")
         super().on_open(ws) # type: ignore
         self.subscribe_user(ScreepsConsoleMonitor.CONSOLE_WATCHPOINT) # type: ignore
+        logger.info("Requested Screeps console subscription")
+
+    @override
+    def on_message(self, ws, message): # type: ignore
+        if message.startswith("auth ok"):
+            logger.info("Screeps websocket authentication succeeded")
+        elif message.startswith("auth failed"):
+            logger.error("Screeps websocket authentication failed")
+        super().on_message(ws, message) # type: ignore
+
+    @override
+    def on_close(self, ws, close_status_code=None, close_msg=None): # type: ignore
+        logger.info(
+            "Screeps websocket closed (status=%r, reason=%r)",
+            close_status_code,
+            close_msg,
+        )
+        super().on_close(ws) # type: ignore
 
     @override
     def process_log(self, ws, message, shard='shard0'): # type: ignore

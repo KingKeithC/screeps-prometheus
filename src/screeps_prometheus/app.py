@@ -1,5 +1,8 @@
 import html
+import logging
+from io import TextIOWrapper
 from pathlib import Path
+import sys
 from threading import Event, Thread
 from typing import Literal, Optional
 
@@ -51,6 +54,11 @@ class ScreepsPrometheus(Tap):
 
     @staticmethod
     def run() -> None:
+        for stream in (sys.stdout, sys.stderr):
+            if isinstance(stream, TextIOWrapper):
+                stream.reconfigure(line_buffering=True, write_through=True)
+        logging.basicConfig(level=logging.INFO, stream=sys.stderr)
+
         args = ScreepsPrometheus().parse_args()
         screeps_config = args.get_screeps_config()
         prometheus_config = args.get_prometheus_config()
@@ -69,8 +77,16 @@ class ScreepsPrometheus(Tap):
 
         watcher = None
         if args.action == "tail-console" or args.action == "both":
-            watcher = screeps_config.get_console_watcher(api, lambda log: print(html.unescape(log), flush=True))
-            logs = Thread(target=watcher.start, daemon=True)
+            console_watcher = screeps_config.get_console_watcher(api, lambda log: print(html.unescape(log), flush=True))
+
+            def watch_logs() -> None:
+                try:
+                    console_watcher.start()
+                except Exception:
+                    logging.exception("Console log watcher failed")
+
+            watcher = console_watcher
+            logs = Thread(target=watch_logs, daemon=True)
             threads.append(logs)
 
         for t in threads:
