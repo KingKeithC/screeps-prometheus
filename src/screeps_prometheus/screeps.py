@@ -121,8 +121,8 @@ class ScreepsConfig(Tap):
             **authopts,
         )
 
-        me: OrderedDict = api.me() # type: ignore
-        print(f"Logged into Screeps as {me}")
+        # me: OrderedDict = api.me() # type: ignore
+        # print(f"Logged into Screeps as {me}")
         return api
 
 
@@ -181,6 +181,10 @@ class ScreepsConsoleMonitor(Socket):
     def on_open(self, ws): # type: ignore
         logger.info("Screeps websocket connected; authenticating")
         super().on_open(ws) # type: ignore
+
+    @override
+    def set_subscriptions(self): # type: ignore
+        super().set_subscriptions() # type: ignore
         self.subscribe_user(ScreepsConsoleMonitor.CONSOLE_WATCHPOINT) # type: ignore
         logger.info("Requested Screeps console subscription")
 
